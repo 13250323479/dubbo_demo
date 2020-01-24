@@ -1,0 +1,9 @@
+spring:
+  data:
+    elasticsearch:
+      cluster-name: docker-cluster
+      cluster-nodes: 47.112.206.252:9300
+
+
+## Elasticsearch配置文件（必须）
+## 该配置和Elasticsearch的elasticsearch.yml中的配置信息有关
