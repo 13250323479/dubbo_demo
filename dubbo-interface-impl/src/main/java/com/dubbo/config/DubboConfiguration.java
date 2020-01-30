@@ -8,6 +8,9 @@ import com.alibaba.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.net.*;
+import java.util.Enumeration;
+
 /**
  * 注解方式配置
  */
@@ -16,9 +19,10 @@ import org.springframework.context.annotation.Configuration;
 public class DubboConfiguration {
 
     @Bean // #1 服务提供者信息配置
-    public ProviderConfig providerConfig() {
+    public ProviderConfig providerConfig() throws UnknownHostException {
         ProviderConfig providerConfig = new ProviderConfig();
         providerConfig.setTimeout(1000);
+        providerConfig.setHost(getLocalIpByNetcard());
         return providerConfig;
     }
 
@@ -44,5 +48,31 @@ public class DubboConfiguration {
         protocolConfig.setName("dubbo");
         protocolConfig.setPort(38380);
         return protocolConfig;
+    }
+
+    /**
+     * 获取本地IP地址，直接根据第一个网卡地址作为其内网ipv4地址，避免返回 127.0.0.1
+     *
+     * @return
+     */
+    public static String getLocalIpByNetcard() {
+        try {
+            for (Enumeration<NetworkInterface> e = NetworkInterface.getNetworkInterfaces(); e.hasMoreElements(); ) {
+                NetworkInterface item = e.nextElement();
+                for (InterfaceAddress address : item.getInterfaceAddresses()) {
+                    if (item.isLoopback() || !item.isUp()) {
+                        continue;
+                    }
+                    if (address.getAddress() instanceof Inet4Address) {
+                        Inet4Address inet4Address = (Inet4Address) address.getAddress();
+                        return inet4Address.getHostAddress();
+                    }
+                }
+            }
+            return InetAddress.getLocalHost().getHostAddress();
+        } catch (SocketException | UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }
